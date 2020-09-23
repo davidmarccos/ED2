@@ -5,110 +5,203 @@
  */
 package arvorebuscabinaria.avl;
 
-public class ArvoreAVLMap {
+import java.util.Set;
+import java.util.TreeSet;
+
+public class ArvoreAVLMap<V> implements MyMap<Integer, V> {
+
     class No {
-		private int chave, altura;
-		private No esquerda, direita;
 
-		public No(int d) {
-			chave = d;
-			altura = 1;
-		}
+        private int chave, altura;
+        private No esquerda, direita;
+        private V valor;
 
-		public int getAltura() {
-			return altura;
-		}
-	}
+        public No(Integer d, V valor) {
+            chave = d;
+            altura = 1;
+            this.valor = valor;
+        }
 
-	private No raiz;
+        public int getAltura() {
+            return altura;
+        }
+    }
 
-	private int altura(No N) {
-		if (N == null)
-			return 0;
+    private No raiz;
 
-		return N.getAltura();
-	}
+    @Override
+    public int size() {
+        if (raiz == null) {
+            return 0;
+        } else {
+            return sizeAux(raiz);
+        }
+    }
 
-	private No rotacionaDireita(No y) {
-		No x = y.esquerda;
-		No T2 = x.direita;
+    public int sizeAux(No umNo) {
+        return 1 + sizeAux(umNo.esquerda) + sizeAux(umNo.direita);
+    }
 
-		x.direita = y;
-		y.esquerda = T2;
+    @Override
+    public void put(Integer key, V value) {
+        raiz = inserir(raiz, key, value);
+    }
 
-		y.altura = Math.max(altura(y.esquerda), altura(y.direita)) +1;
-		x.altura = Math.max(altura(x.esquerda), altura(x.direita)) + 1;
-		return x;
-	}
+    @Override
+    public boolean isEmpty() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 
-	private No rotacionaEsquerda(No x) {
-		No y = x.direita;
-		No T2 = y.esquerda;
+    @Override
+    public boolean containsKey(Integer key) {
+        //verifica se a chave está presente ou não
+        if(get(key) != null)
+            return true;
+        else
+            return false;
+    }
 
-		y.esquerda = x;
-		x.direita = T2;
+    @Override
+    public V get(Integer key) {
+        return get(raiz, key);
+        //percorro a arvore até encontrar a chave, e quando encontrar a chave eu retorno o valor dela;
+    }
 
-		x.altura = Math.max(altura(x.esquerda), altura(x.direita)) + 1;
-		y.altura = Math.max(altura(y.esquerda), altura(y.direita)) + 1;
-		return y;
-	}
+    private V get(No umNo, Comparable key) {
+        if (umNo == null) {
+            return null;
+        }
+        int compara = key.compareTo(umNo.chave);
+        if (compara == 0) {
+            return (V) umNo.valor;
+        } else if (compara < 0) {
+            return get(umNo.esquerda, key);
+        } else if (compara > 0) {
+            return get(umNo.direita, key);
+        } else {
+            return null;
+        }
+    }
 
-	private int getBalanco(No N) {
-		if (N == null)
-			return 0;
+    @Override
+    public V remove(Integer key) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 
-		return altura(N.esquerda) - altura(N.direita);
-	}
-	
-	private No inserir(No no, int chave) {
+    @Override
+    public void clear() {
+        raiz = null;
+    }
 
-		if (no == null)
-			return (new No(chave));
+    @Override
+    public Set<Integer> keySet() {
+        Set<Integer> set = new TreeSet<Integer>();
+        keySetAux(raiz, set);
+        return set;
+    }
 
-		if (chave < no.chave)
-			no.esquerda = inserir(no.esquerda, chave);
-		else if (chave > no.chave)
-			no.direita = inserir(no.direita, chave);
-		else
-			return no;
+    protected void keySetAux(No umNo, Set<Integer> set) {
+        if (umNo != null) {
+            keySetAux(umNo.esquerda, set);
+            set.add(umNo.chave);
+            keySetAux(umNo.direita, set);
+        }
+    }
 
-		//atualiza altura
-		no.altura = 1 + Math.max(altura(no.esquerda), altura(no.direita));
+    private int altura(No N) {
+        if (N == null) {
+            return 0;
+        }
 
-		//Baleceamento
-		int balance = getBalanco(no);
+        return N.getAltura();
+    }
 
-		// LL		
-		if (balance > 1 && chave < no.esquerda.chave)
-			return rotacionaDireita(no);
+    private No rotacionaDireita(No y) {
+        No x = y.esquerda;
+        No T2 = x.direita;
 
-		// RR
-		if (balance < -1 && chave > no.direita.chave)
-			return rotacionaEsquerda(no);
+        x.direita = y;
+        y.esquerda = T2;
 
-		// LR
-		if (balance > 1 && chave > no.esquerda.chave) {
-			no.esquerda = rotacionaEsquerda(no.esquerda);
-			return rotacionaDireita(no);
-		}
+        y.altura = Math.max(altura(y.esquerda), altura(y.direita)) + 1;
+        x.altura = Math.max(altura(x.esquerda), altura(x.direita)) + 1;
+        return x;
+    }
 
-		// RL
-		if (balance < -1 && chave < no.direita.chave) {
-			no.direita = rotacionaDireita(no.direita);
-			return rotacionaEsquerda(no);
-		}
+    private No rotacionaEsquerda(No x) {
+        No y = x.direita;
+        No T2 = y.esquerda;
 
-		return no;
-	}
-	
-	public void inserir(int chave) {
+        y.esquerda = x;
+        x.direita = T2;
+
+        x.altura = Math.max(altura(x.esquerda), altura(x.direita)) + 1;
+        y.altura = Math.max(altura(y.esquerda), altura(y.direita)) + 1;
+        return y;
+    }
+
+    private int getBalanco(No N) {
+        if (N == null) {
+            return 0;
+        }
+
+        return altura(N.esquerda) - altura(N.direita);
+    }
+
+    private No inserir(No no, int chave, V valor) {
+
+        if (no == null) {
+            return (new No(chave, valor));
+        }
+
+        if (chave < no.chave) {
+            no.esquerda = inserir(no.esquerda, chave, valor);
+        } else if (chave > no.chave) {
+            no.direita = inserir(no.direita, chave, valor);
+        } else {
+            return no;
+        }
+
+        //atualiza altura
+        no.altura = 1 + Math.max(altura(no.esquerda), altura(no.direita));
+
+        //Baleceamento
+        int balance = getBalanco(no);
+
+        // LL		
+        if (balance > 1 && chave < no.esquerda.chave) {
+            return rotacionaDireita(no);
+        }
+
+        // RR
+        if (balance < -1 && chave > no.direita.chave) {
+            return rotacionaEsquerda(no);
+        }
+
+        // LR
+        if (balance > 1 && chave > no.esquerda.chave) {
+            no.esquerda = rotacionaEsquerda(no.esquerda);
+            return rotacionaDireita(no);
+        }
+
+        // RL
+        if (balance < -1 && chave < no.direita.chave) {
+            no.direita = rotacionaDireita(no.direita);
+            return rotacionaEsquerda(no);
+        }
+
+        return no;
+    }
+
+    /*public void inserir(int chave) {
 		raiz = inserir(raiz, chave);
-	}
-
-	public static void main(String[] args) {
-		ArvoreAVLMap tree = new ArvoreAVLMap();
-		tree.inserir(1);
-		tree.inserir(2);
-		tree.inserir(3);
-	}
+	}*/
+    public static void main(String[] args) {
+        ArvoreAVLMap tree = new ArvoreAVLMap();
+        tree.put(1, 1);
+        tree.put(2, 2);
+        tree.put(3, 3);
+        tree.containsKey(2);
+        System.out.println("A chave '3' existe? " + tree.containsKey(3));
+    }
 }
